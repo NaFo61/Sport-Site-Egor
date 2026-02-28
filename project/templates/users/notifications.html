@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Уведомления{% endblock %}
+
+{% block extra_head %}
+<style>
+    .notification-card {
+        border-left: 4px solid;
+        transition: all 0.2s;
+        margin-bottom: 10px;
+    }
+    
+    .notification-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .notification-unread {
+        border-left-color: #007bff;
+        background-color: rgba(0, 123, 255, 0.05);
+    }
+    
+    .notification-read {
+        border-left-color: #6c757d;
+        background-color: #f8f9fa;
+    }
+    
+    .notification-time {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    
+    .notification-icon {
+        font-size: 1.5rem;
+        margin-right: 15px;
+        color: #6c757d;
+    }
+    
+    .notification-unread .notification-icon {
+        color: #007bff;
+    }
+    
+    .mark-read-btn {
+        font-size: 0.8rem;
+        padding: 2px 8px;
+    }
+    
+    .empty-state {
+        padding: 60px 20px;
+        text-align: center;
+        color: #6c757d;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        margin-bottom: 20px;
+        opacity: 0.3;
+    }
+    
+    .notification-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+    
+    @media (max-width: 768px) {
+        .notification-time {
+            display: block;
+            margin-top: 5px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="mb-0">
+                    <i class="bi bi-bell me-2"></i>Уведомления
+                    {% if unread_count > 0 %}
+                        <span class="badge bg-primary ms-2">{{ unread_count }}</span>
+                    {% endif %}
+                </h1>
+                
+                {% if notifications and unread_count > 0 %}
+                <form method="post" action="{% url 'users:mark_all_read' %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-check-all me-1"></i>Отметить все как прочитанные
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+            
+            {% if notifications %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body p-0">
+                            <div class="list-group list-group-flush">
+                                {% for notif in notifications %}
+                                <div class="list-group-item p-0">
+                                    <div class="notification-card {% if not notif.is_read %}notification-unread{% else %}notification-read{% endif %} p-4">
+                                        <div class="d-flex align-items-start">
+                                            <div class="notification-icon">
+                                                <i class="bi {% if not notif.is_read %}bi-bell-fill{% else %}bi-bell{% endif %}"></i>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <p class="mb-1 {% if not notif.is_read %}fw-bold{% endif %}">
+                                                            {{ notif.message }}
+                                                        </p>
+                                                        <small class="notification-time">
+                                                            <i class="bi bi-clock me-1"></i>
+                                                            {{ notif.created_at|date:"d.m.Y в H:i" }}
+                                                        </small>
+                                                    </div>
+                                                    {% if not notif.is_read %}
+                                                    <form method="post" action="{% url 'users:mark_notification_read' notif.id %}" class="ms-3">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-sm btn-outline-primary mark-read-btn">
+                                                            <i class="bi bi-check me-1"></i>Прочитано
+                                                        </button>
+                                                    </form>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <p class="text-muted small">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Всего уведомлений: {{ notifications|length }}, из них непрочитанных: {{ unread_count }}
+                </p>
+            </div>
+            {% else %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="empty-state">
+                                <i class="bi bi-bell-slash"></i>
+                                <h4>Уведомлений пока нет</h4>
+                                <p class="text-muted">Здесь будут появляться уведомления о новых приглашениях и событиях</p>
+                                <a href="{% url 'home' %}" class="btn btn-primary mt-3">
+                                    <i class="bi bi-house me-1"></i>На главную
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if notifications %}
+            <div class="mt-4 d-flex justify-content-between">
+                <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-1"></i>На главную
+                </a>
+                
+                {% if unread_count > 0 %}
+                <form method="post" action="{% url 'users:mark_all_read' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-all me-1"></i>Прочитать все
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

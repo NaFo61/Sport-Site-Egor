@@ -1,0 +1,368 @@
+{% extends 'base.html' %}
+
+{% block title %}Профиль - Спортивная школа{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Боковая панель профиля -->
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-body text-center">
+                <!-- Аватар пользователя -->
+{% if user_type == 'trainer' and trainer and trainer.avatar %}
+    <img src="{{ trainer.avatar.url }}" class="profile-avatar-large mx-auto mb-3" alt="Аватар">
+{% elif user_type == 'sportsman' and sportsman and sportsman.avatar %}
+    <img src="{{ sportsman.avatar.url }}" class="profile-avatar-large mx-auto mb-3" alt="Аватар">
+{% else %}
+    <div class="profile-avatar-large mx-auto mb-3">
+        {{ user.username|first|upper }}
+    </div>
+{% endif %}
+                <h4 class="card-title">{{ user.username }}</h4>
+
+                {% if user_type == 'trainer' %}
+                    <span class="badge bg-success fs-6 mb-2">Тренер</span>
+                    {% if trainer %}
+                        <p class="text-muted">{{ trainer.user.get_full_name }}</p>
+                    {% endif %}
+                {% else %}
+                    <span class="badge bg-primary fs-6 mb-2">Спортсмен</span>
+                    {% if sportsman %}
+                        <p class="text-muted">{{ sportsman.user.get_full_name }}</p>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        <h2>Неотвеченные приглашения:</h2>
+  <div class="schedule-card">
+    {% if user_type == 'sportsman' %}
+        {% for response in responses %}
+            <h3>{{ response.schedule.training_type }}</h3>
+            <p><strong>Начало:</strong> {{ response.schedule.start_time }}</p>
+            <p><strong>Окончание:</strong> {{ response.schedule.finish_time }}</p>
+            <p><strong>Тип:</strong> {{ response.schedule.get_type_display }}</p>
+
+            <div class="actions">
+                <form method="post" action="{% url 'users:accept_schedule' response.id %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-success btn-sm">
+                                            <i class="bi bi-check-circle"></i> Принять
+                                        </button>
+                                    </form>
+                                    <form method="post" action="{% url 'users:decline_schedule' response.id %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger btn-sm">
+                                            <i class="bi bi-x-circle"></i> Отклонить
+                                        </button>
+                                    </form>
+            </div>
+        {% empty %}
+        <p>Нет не отвеченных приглашений.</p>
+{% endfor %}
+{% endif %}
+            </div>
+    </div>
+
+    <!-- Основное содержимое профиля -->
+    <div class="col-md-8">
+        <!-- Приветственная карточка -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col">
+                        {% if user_type == 'trainer' %}
+                            <h3 class="card-title">Добро пожаловать, тренер {{ trainer.user.first_name }}!</h3>
+
+                        {% else %}
+                            <h3 class="card-title">Добро пожаловать, {{ sportsman.user.first_name|default:user.username }}!</h3>
+                            <p class="card-text text-muted">Следите за своим расписанием тренировок и прогрессом.</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-auto">
+                        {% if user_type == 'trainer' %}
+                            <i class="bi bi-person-badge display-4 text-success"></i>
+                        {% else %}
+                            <i class="bi bi-person-running display-4 text-primary"></i>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Контент для тренера -->
+        {% if user_type == 'trainer' and trainer %}
+        <div class="row">
+            <!-- Мои ученики -->
+            <div class="col-12 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0"><i class="bi bi-people"></i> Мои ученики</h6>
+                    </div>
+                    <div class="card-body">
+                        {% if trainer.sportsmen.all %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ФИО</th>
+                                        <th>Группа</th>
+                                        <th>Разряд</th>
+                                        <th>Дата рождения</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for sportsman in trainer.sportsmen.all %}
+                                    <tr>
+                                        <td>{{ sportsman.user.get_full_name }}</td>
+                                        <td>
+                                            {% if sportsman.training_group %}
+                                                <span class="badge bg-info">{{ sportsman.training_group.title }}</span>
+                                            {% else %}
+                                                <span class="text-muted">Не назначена</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if sportsman.razryad %}
+                                                <span class="badge bg-warning text-dark">{{ sportsman.razryad }}</span>
+                                            {% else %}
+                                                <span class="text-muted">Нет</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if sportsman.birth_date %}
+                                                <span class="badge bg-secondary">{{ sportsman.birth_date }}</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Неизвестно</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-people display-4"></i>
+                            <p class="mt-2">У вас пока нет учеников</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ближайшие тренировки -->
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0"><i class="bi bi-calendar-event"></i> Ближайшие тренировки</h6>
+                    </div>
+                    <div class="card-body">
+                        {% if upcoming_trainings %}
+                            <div class="list-group list-group-flush">
+                                {% for training in upcoming_trainings %}
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">{{ training.training_type.name }}</h6>
+                                            <small class="text-muted">
+                                                {{ training.start_time|date:"d.m.Y H:i" }} - 
+                                                {{ training.finish_time|date:"H:i" }}
+                                            </small>
+                                            {% if user_type == 'trainer' %}
+                                                <br>
+                                                <small class="text-muted">
+                                                    {% if training.type == 'group' %}
+                                                        Группа: {{ training.group.title|default:"Без группы" }}
+                                                    {% else %}
+                                                        Спортсмен: {{ training.sportsman.user.get_full_name|default:training.sportsman.user.username }}
+                                                    {% endif %}
+                                                </small>
+                                            {% else %}
+                                                <br>
+                                                <small class="text-muted">
+                                                    Тренер: {{ training.trainer.user.get_full_name|default:training.trainer.user.username }}
+                                                </small>
+                                            {% endif %}
+                                        </div>
+                                        <span class="badge {% if training.type == 'group' %}bg-primary{% else %}bg-success{% endif %} rounded-pill">
+                                            {{ training.get_type_display }}
+                                        </span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center text-muted py-4">
+                                <i class="bi bi-calendar-x display-4"></i>
+                                <p class="mt-2">Ближайших тренировок нет</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Контент для спортсмена -->
+        {% else %}
+        <div class="row">
+            <!-- Информация о тренере -->
+            <!-- Информация о тренере -->
+{% if sportsman and sportsman.main_trainer %}
+<div class="col-md-6 mb-4">
+    <div class="card shadow-sm h-100">
+        <div class="card-header bg-info text-white">
+            <h6 class="mb-0"><i class="bi bi-person-badge"></i> Мой тренер</h6>
+        </div>
+        <div class="card-body text-center">
+            {% if sportsman.main_trainer.avatar %}
+                <img src="{{ sportsman.main_trainer.avatar.url }}" class="trainer-avatar mb-3" alt="Аватар тренера">
+            {% else %}
+                <div class="trainer-avatar mb-3">
+                    {{ sportsman.main_trainer.user.first_name|first|upper }}
+                </div>
+            {% endif %}
+            <h5>{{ sportsman.main_trainer.user.get_full_name }}</h5>
+            <p class="text-muted">Основной тренер</p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+            <!-- Моя группа -->
+            {% if sportsman and sportsman.training_group %}
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-warning text-dark">
+                        <h6 class="mb-0"><i class="bi bi-collection"></i> Моя группа</h6>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">{{ sportsman.training_group.title }}</h5>
+                        <p class="card-text">{{ sportsman.training_group.description|default:"Описание группы отсутствует" }}</p>
+                        {% if sportsman.training_group.is_active %}
+                            <span class="badge bg-success">Активная</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Неактивная</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Ближайшие тренировки -->
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0"><i class="bi bi-calendar-check"></i> Ближайшие тренировки</h6>
+                    </div>
+                    <div class="card-body">
+                        {% if upcoming_trainings %}
+                            <div class="list-group list-group-flush">
+                                {% for training in upcoming_trainings %}
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">{{ training.training_type.name }}</h6>
+                                            <small class="text-muted">
+                                                {{ training.start_time|date:"d.m.Y H:i" }} - 
+                                                {{ training.finish_time|date:"H:i" }}
+                                            </small>
+                                            <br>
+                                            <small class="text-muted">
+                                                Тренер: {{ training.trainer.user.get_full_name|default:training.trainer.user.username }}
+                                            </small>
+                                        </div>
+                                        <span class="badge {% if training.type == 'group' %}bg-primary{% else %}bg-success{% endif %} rounded-pill">
+                                            {{ training.get_type_display }}
+                                        </span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center text-muted py-4">
+                                <i class="bi bi-calendar-x display-4"></i>
+                                <p class="mt-2">Ближайших тренировок нет</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .profile-avatar-large {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #007bff, #6610f2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .trainer-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #20c997, #198754);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 1.5rem;
+        margin: 0 auto;
+    }
+
+    .list-group-item.active {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+
+    .card {
+        border: none;
+        border-radius: 15px;
+    }
+
+    .card-header {
+        border-radius: 15px 15px 0 0 !important;
+        border: none;
+    }
+
+    .table th {
+        border-top: none;
+        font-weight: 600;
+    }
+    .profile-avatar-large {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #007bff, #6610f2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    object-fit: cover; /* Для изображений */
+}
+    .trainer-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #20c997, #198754);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 1.5rem;
+    margin: 0 auto;
+    object-fit: cover; /* Для изображений */
+}
+</style>
+{% endblock %}

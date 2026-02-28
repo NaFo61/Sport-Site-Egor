@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Пригласить спортсменов{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-calendar-plus"></i> Пригласить спортсменов на тренировку
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label">Тип тренировки</label>
+                        {{ form.training_type }}
+                        {% if form.training_type.errors %}
+                            <div class="text-danger">{{ form.training_type.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Начало</label>
+                            {{ form.start_time }}
+                            {% if form.start_time.errors %}
+                                <div class="text-danger">{{ form.start_time.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Окончание</label>
+                            {{ form.finish_time }}
+                            {% if form.finish_time.errors %}
+                                <div class="text-danger">{{ form.finish_time.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Описание</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="text-danger">{{ form.description.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Выберите спортсменов:</label>
+                        <div class="border rounded p-3 bg-light">
+                            {{ form.sportsmen }}
+                            {% if form.sportsmen.errors %}
+                                <div class="text-danger mt-2">{{ form.sportsmen.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <small class="text-muted">
+                            Выберите одного или нескольких спортсменов
+                        </small>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-send"></i> Отправить приглашения
+                        </button>
+                        <a href="{% url 'users:calendar' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Отмена
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

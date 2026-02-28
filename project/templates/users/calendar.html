@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+
+{% block title %}Календарь тренировок{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">
+        <i class="bi bi-calendar-event"></i> Календарь тренировок
+    </h2>
+
+    {% if not user.is_authenticated %}
+        <div class="alert alert-warning">
+            Для просмотра календаря необходимо войти в систему.
+        </div>
+    {% else %}
+
+        <!-- ===== МЕСЯЦ ===== -->
+        {% for month in months %}
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <strong>{{ month.title }}</strong>
+                <span class="badge bg-light text-dark">Тренировок: {{ month.trainings|length }}</span>
+            </div>
+
+            <div class="card-body p-2">
+                <table class="table table-bordered text-center align-middle calendar-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Пн</th>
+                            <th>Вт</th>
+                            <th>Ср</th>
+                            <th>Чт</th>
+                            <th>Пт</th>
+                            <th>Сб</th>
+                            <th>Вс</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for week in month.weeks %}
+                        <tr>
+                            {% for day in week %}
+                                {% if day %}
+                                    <td class="calendar-day position-relative" style="height: 140px; vertical-align: top;">
+                                        <div class="d-flex flex-column h-100">
+                                            <!-- Заголовок дня -->
+                                            <div class="day-header mb-1">
+                                                <div class="fw-bold {% if day.date == today.date %}bg-primary text-white rounded-circle d-inline-block px-2 py-1{% endif %}">
+                                                    {{ day.date.day }}
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Список тренировок -->
+                                            <div class="trainings-list flex-grow-1 overflow-auto" style="max-height: 100px;">
+                                                {% for training in day.trainings %}
+                                                    <div class="training-item small text-start border rounded p-1 mb-1 bg-light">
+                                                        <!-- Цветовая индикация типа тренировки -->
+                                                        <div class="d-flex align-items-center mb-1">
+                                                            <span class="training-type-indicator me-1" 
+                                                                  style="width: 8px; height: 8px; border-radius: 50%; 
+                                                                  background-color: {% if training.type == 'group' %}#28a745{% else %}#007bff{% endif %};">
+                                                            </span>
+                                                            <strong class="text-truncate">{{ training.training_type.name }}</strong>
+                                                        </div>
+                                                        
+                                                        <div class="text-muted small">
+                                                            <i class="bi bi-clock me-1"></i>
+                                                            {{ training.start_time|time:"H:i" }}
+                                                        </div>
+                                                        
+                                                        {% if user.trainer %}
+                                                            <div class="text-muted small mt-1">
+                                                                {% if training.sportsman %}
+                                                                    <i class="bi bi-person me-1"></i>
+                                                                    {{ training.sportsman.user.get_short_name|default:training.sportsman.user.username }}
+                                                                    {% with training.responses.first as response %}
+                                                                        {% if response %}
+                                                                            {% if response.status == 'declined' %}
+                                                                                <span class="badge bg-danger badge-sm">Откл</span>
+                                                                            {% elif response.status == 'accepted' %}
+                                                                                <span class="badge bg-success badge-sm">Прин</span>
+                                                                            {% elif response.status == 'waiting' %}
+                                                                                <span class="badge bg-warning badge-sm">Ожид</span>
+                                                                            {% endif %}
+                                                                        {% endif %}
+                                                                    {% endwith %}
+                                                                {% endif %}
+                                                                {% if training.group %}
+                                                                    <i class="bi bi-people me-1"></i>
+                                                                    {{ training.group }}
+                                                                {% endif %}
+                                                            </div>
+                                                        {% endif %}
+                                                        
+                                                        {% if user.sportsman and training.type == 'individual' %}
+                                                            <div class="badge bg-success badge-sm">Принята</div>
+                                                        {% endif %}
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                            
+                                            <!-- Индикатор количества тренировок -->
+                                            {% if day.trainings|length > 0 %}
+                                                <div class="training-count mt-1">
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-list-ul me-1"></i>
+                                                        {{ day.trainings|length }}
+                                                    </small>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <!-- Ссылка на детали дня -->
+                                        <a href="{% url 'users:calendar_day' day.date|date:'Y-m-d' %}"
+                                           class="stretched-link" title="Подробнее"></a>
+                                    </td>
+                                {% else %}
+                                    <td class="bg-light" style="height: 140px;"></td>
+                                {% endif %}
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endfor %}
+
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+.calendar-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.calendar-table th {
+    width: 14.28%; /* 100% / 7 дней */
+    height: 40px;
+    font-weight: 600;
+}
+
+.calendar-table td {
+    width: 14.28%;
+    vertical-align: top;
+    position: relative;
+    overflow: hidden;
+}
+
+.calendar-day:hover {
+    background-color: rgba(0, 123, 255, 0.05) !important;
+    cursor: pointer;
+}
+
+.day-header {
+    min-height: 28px;
+}
+
+.trainings-list {
+    min-height: 30px;
+}
+
+.training-item {
+    font-size: 0.75rem;
+    line-height: 1.2;
+    transition: transform 0.2s;
+}
+
+.training-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.badge-sm {
+    font-size: 0.6rem;
+    padding: 0.1em 0.4em;
+}
+
+/* Для пустых дней */
+.calendar-day:empty::before {
+    content: "";
+    display: block;
+    height: 100%;
+}
+
+/* Адаптивность для мобильных */
+@media (max-width: 768px) {
+    .calendar-table {
+        font-size: 0.85rem;
+    }
+    
+    .calendar-table td {
+        height: 120px !important;
+    }
+    
+    .training-item {
+        font-size: 0.7rem;
+        padding: 0.25rem !important;
+        margin-bottom: 0.25rem !important;
+    }
+    
+    .trainings-list {
+        max-height: 80px !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .calendar-table td {
+        height: 100px !important;
+    }
+    
+    .day-header .fw-bold {
+        font-size: 0.9rem;
+    }
+    
+    .training-type-indicator {
+        width: 6px !important;
+        height: 6px !important;
+    }
+    
+    .trainings-list {
+        max-height: 60px !important;
+    }
+}
+
+/* Скроллбар для списка тренировок */
+.trainings-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.trainings-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 2px;
+}
+
+.trainings-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 2px;
+}
+
+.trainings-list::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+</style>
+{% endblock %}

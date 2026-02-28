@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Спортивная платформа</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 90%;
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .nav-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .nav-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        .nav-card:hover {
+            transform: translateY(-5px);
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        .nav-card h3 {
+            color: #667eea;
+            margin-bottom: 5px;
+            font-size: 18px;
+        }
+        .nav-card p {
+            color: #666;
+            font-size: 14px;
+        }
+        .user-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .logout-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-top: 20px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+            font-size: 16px;
+        }
+        .logout-btn:hover {
+            background: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏋️ Спортивная платформа</h1>
+        <p class="subtitle">Система управления тренировками</p>
+
+        {% if user.is_authenticated %}
+            <div class="user-info">
+                <strong>Привет, {{ user.username }}!</strong>
+                {% if user.is_superuser %}
+                    <span style="color: #667eea;">👑 Администратор</span>
+                {% elif user.is_staff %}
+                    <span style="color: #667eea;">👑 Тренер</span>
+                {% endif %}
+            </div>
+
+            <div class="nav-grid">
+                {% if not user.is_superuser %}
+                <a href="{% url 'users:profile' %}" class="nav-card">
+                    <h3>👤 Профиль</h3>
+                    <p>Личная информация</p>
+                </a>
+
+                <a href="{% url 'users:calendar' %}" class="nav-card">
+                    <h3>📅 Календарь</h3>
+                    <p>Расписание тренировок</p>
+                </a>
+                <a href="{% url 'users:notifications' %}" class="nav-card">
+                    <h3>🔔 Уведомления</h3>
+                    <p>Важные события</p>
+                </a>
+                {% endif %}
+                {% if user.is_superuser %}
+                <a href="{% url 'admin:index' %}" class="nav-card">
+                    <h3>⚙️ Админка</h3>
+                    <p>Управление системой</p>
+                </a>
+                {% endif %}
+            </div>
+
+            <a href="{% url 'users:logout' %}" class="logout-btn">Выйти</a>
+
+        {% else %}
+            <div class="nav-grid">
+                <a href="{% url 'users:login' %}" class="nav-card">
+                    <h3>🔐 Войти</h3>
+                    <p>Авторизация</p>
+                </a>
+
+                <a href="{% url 'users:register' %}" class="nav-card">
+                    <h3>📝 Регистрация</h3>
+                    <p>Создать аккаунт</p>
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

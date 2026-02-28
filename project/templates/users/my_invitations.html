@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Мои приглашения{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <h1 class="mb-4">
+            <i class="bi bi-envelope-open"></i> Мои приглашения на тренировки
+        </h1>
+
+        {% if responses %}
+            <div class="list-group">
+                {% for response in responses %}
+                    <div class="list-group-item {% if response.status == 'waiting' %}list-group-item-warning{% elif response.status == 'accepted' %}list-group-item-success{% else %}list-group-item-secondary{% endif %}">
+                        <div class="d-flex w-100 justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h5 class="mb-1">
+                                    {{ response.schedule.training_type.name }}
+                                    <span class="badge 
+                                        {% if response.status == 'waiting' %}bg-warning text-dark
+                                        {% elif response.status == 'accepted' %}bg-success
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ response.get_status_display }}
+                                    </span>
+                                </h5>
+                                <p class="mb-1">
+                                    <i class="bi bi-calendar3"></i> 
+                                    {{ response.schedule.start_time|date:"d.m.Y H:i" }} - 
+                                    {{ response.schedule.finish_time|date:"H:i" }}
+                                </p>
+                                <p class="mb-1">
+                                    <i class="bi bi-person"></i> 
+                                    Тренер: {{ response.schedule.trainer.user.get_full_name }}
+                                </p>
+                                {% if response.schedule.description %}
+                                    <p class="mb-1 text-muted">{{ response.schedule.description }}</p>
+                                {% endif %}
+                            </div>
+
+                            {% if response.status == 'waiting' %}
+                                <div class="ms-3">
+                                    <form method="post" action="{% url 'users:accept_schedule' response.id %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-success btn-sm">
+                                            <i class="bi bi-check-circle"></i> Принять
+                                        </button>
+                                    </form>
+                                    <form method="post" action="{% url 'users:decline_schedule' response.id %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger btn-sm">
+                                            <i class="bi bi-x-circle"></i> Отклонить
+                                        </button>
+                                    </form>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info text-center">
+                <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                <p class="mt-3 mb-0">У вас пока нет приглашений на тренировки</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

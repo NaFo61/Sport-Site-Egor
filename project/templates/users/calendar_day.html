@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}
+Тренировки {{ selected_date|date:"d.m.Y" }}
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="bi bi-calendar-day"></i>
+        {{ selected_date|date:"d.m.Y" }}
+    </h2>
+
+    <a href="{% url 'users:calendar' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Назад к календарю
+    </a>
+</div>
+
+{% if trainings %}
+    <div class="list-group">
+        {% for training in trainings %}
+            <div class="list-group-item mb-2">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="mb-1">
+                            {{ training.training_type.name }}
+                        </h5>
+
+                        <p class="mb-1 text-muted">
+                            <i class="bi bi-clock"></i>
+                            {{ training.start_time|time:"H:i" }} –
+                            {{ training.finish_time|time:"H:i" }}
+                        </p>
+
+                        {% if training.type == "group" %}
+                            <span class="badge bg-primary">Групповая</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Индивидуальная</span>
+                        {% endif %}
+                        
+                        {% if user.sportsman and training.type == 'individual' %}
+                            <span class="badge bg-success">Принята</span>
+                        {% endif %}
+                    </div>
+
+                    <span class="badge bg-light text-dark align-self-start">
+                        {{ training.get_status_display }}
+                    </span>
+                </div>
+
+                <hr>
+
+                {% if training.group %}
+                    <p class="mb-1">
+                        <i class="bi bi-people"></i>
+                        Группа: {{ training.group.title }}
+                    </p>
+                {% endif %}
+
+                {% if training.sportsman %}
+                    <p class="mb-1">
+                        <i class="bi bi-person"></i>
+                        Спортсмен: {{ training.sportsman }}
+                        {% if user.trainer %}
+                            {% with training.responses.first as response %}
+                                {% if response %}
+                                    {% if response.status == 'declined' %}
+                                        <span class="badge bg-danger ms-2">Отклонена спортсменом</span>
+                                    {% elif response.status == 'accepted' %}
+                                        <span class="badge bg-success ms-2">Принята спортсменом</span>
+                                    {% elif response.status == 'waiting' %}
+                                        <span class="badge bg-warning ms-2">Ожидает ответа</span>
+                                    {% endif %}
+                                {% endif %}
+                            {% endwith %}
+                        {% endif %}
+                    </p>
+                {% endif %}
+
+                <p class="mb-0 text-muted">
+                    <i class="bi bi-person-badge"></i>
+                    Тренер: {{ training.trainer }}
+                </p>
+
+                {% if training.description %}
+                    <p class="mt-2">
+                        <i class="bi bi-card-text"></i>
+                        {{ training.description }}
+                    </p>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        В этот день тренировок нет
+    </div>
+{% endif %}
+{% endblock %}

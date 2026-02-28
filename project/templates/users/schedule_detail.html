@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}Событие{% endblock %}
+
+{% block content %}
+<h1>{{ schedule.training_type }}</h1>
+<p>Дата: {{ schedule.start_time|date:"Y-m-d H:i" }} — {{ schedule.finish_time|date:"Y-m-d H:i" }}</p>
+<p>Тип: {{ schedule.get_type_display }}</p>
+<p>Статус: <span id="schedule-status">{{ schedule.get_status_display }}</span></p>
+<p>
+    {% if response %}
+      Ваш отклик: <strong id="my-status">{{ response.get_status_display }}</strong>
+      {% if response.status == 'pending' %}
+        <button id="btn-accept" data-response-id="{{ response.id }}">Принять</button>
+        <button id="btn-decline" data-response-id="{{ response.id }}">Отклонить</button>
+      {% endif %}
+    {% else %}
+      Вас не приглашали.
+    {% endif %}
+</p>
+
+{% if is_author_trainer and responses %}
+  <h2>Ответы участников</h2>
+  <table>
+    <thead><tr><th>Спортсмен</th><th>Статус</th></tr></thead>
+    <tbody>
+      {% for r in responses %}
+        <tr><td>{{ r.sportsman.user.get_full_name }}</td><td>{{ r.get_status_display }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i=0; i<cookies.length; i++){
+      const cookie = cookies[i].trim();
+      if(cookie.substring(0,name.length+1) === (name + '=')){
+        cookieValue = decodeURIComponent(cookie.substring(name.length+1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+const csrftoken = getCookie('csrftoken');
+
+document.addEventListener('DOMContentLoaded', function(){
+  const btnAccept = document.getElementById('btn-accept');
+  const btnDecline = document.getElementById('btn-decline');
+
+  function sendAction(url, callback){
+    fetch(url, {method: 'POST', headers: {'X-CSRFToken': csrftoken, 'Accept': 'application/json'}})
+      .then(r => r.json())
+      .then(data => { if(data.status === 'ok') callback(data); else alert('Ошибка'); })
+      .catch(e => alert('Ошибка сети: ' + e));
+  }
+
+  if(btnAccept){
+    btnAccept.addEventListener('click', function(){
+      const id = this.dataset.responseId;
+      const url = "{% url 'users:accept_schedule' 0 %}".replace('/0/', '/' + id + '/');
+      sendAction(url, function(data){
+        document.getElementById('my-status').innerText = 'Принято';
+      });
+    });
+  }
+  if(btnDecline){
+    btnDecline.addEventListener('click', function(){
+      const id = this.dataset.responseId;
+      const url = "{% url 'users:decline_schedule' 0 %}".replace('/0/', '/' + id + '/');
+      sendAction(url, function(data){
+        document.getElementById('my-status').innerText = 'Отклонено';
+      });
+    });
+  }
+});
+</script>
+{% endblock %}
+Куда: C:\Users\Anastasia\Desktop\проект\egor\project\users\templates\users\schedule_detail.html
+
+6) Шаблон уведомлений: users/templates/users/notifications.html
+html
+Копировать код
+<!-- users/templates/users/notifications.html -->
+{% extends "base.html" %}
+{% block content %}
+<h1>Уведомления</h1>
+<ul>
+  {% for n in notifications %}
+    <li {% if not n.is_read %}style="font-weight:bold"{% endif %}>
+      {{ n.message }} — {{ n.created_at|date:"Y-m-d H:i" }}
+      {% if not n.is_read %}
+        <button class="mark-read" data-id="{{ n.id }}">Отметить прочитанным</button>
+      {% endif %}
+    </li>
+  {% empty %}
+    <li>Нет уведомлений</li>
+  {% endfor %}
+</ul>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i=0;i<cookies.length;i++){
+      const cookie = cookies[i].trim();
+      if(cookie.substring(0,name.length+1)===(name + '=')){
+        cookieValue = decodeURIComponent(cookie.substring(name.length+1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+const csrftoken = getCookie('csrftoken');
+
+document.addEventListener('DOMContentLoaded', function(){
+  document.querySelectorAll('.mark-read').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      const id = this.dataset.id;
+      const url = "{% url 'users:mark_notification_read' 0 %}".replace('/0/', '/' + id + '/');
+      fetch(url, {method: 'POST', headers: {'X-CSRFToken': csrftoken, 'Accept': 'application/json'}})
+        .then(r=>r.json()).then(data=>{
+          if(data.status === 'ok') location.reload();
+        }).catch(e=>alert('Ошибка: ' + e));
+    });
+  });
+});
+</script>
+{% endblock %}

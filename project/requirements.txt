@@ -1,0 +1,4 @@
+django==4.2
+pillow==11.2.1
+djangorestframework==3.16.1
+Faker==38.2.0

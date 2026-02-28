@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Расписание тренировок</h2>
+
+{% for schedule in schedules %}
+  <div class="schedule-card">
+    <h3>{{ schedule.training_type }}</h3>
+    <p><strong>Начало:</strong> {{ schedule.start_time }}</p>
+    <p><strong>Окончание:</strong> {{ schedule.finish_time }}</p>
+    <p><strong>Тип:</strong> {{ schedule.get_type_display }}</p>
+
+    {% if user.is_authenticated and user.sportsman %}
+      <div class="actions">
+        <a href="{% url 'respond_to_training' schedule.id 'accept' %}">✅ Принять</a>
+        <a href="{% url 'respond_to_training' schedule.id 'decline' %}">❌ Отклонить</a>
+      </div>
+    {% endif %}
+  </div>
+{% empty %}
+  <p>Нет доступных тренировок.</p>
+{% endfor %}
+{% endblock %}
