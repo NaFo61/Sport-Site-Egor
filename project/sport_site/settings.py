@@ -6,7 +6,10 @@ SECRET_KEY = 'django-insecure-1qp6543u621k*!i831p2s9f7(^^9pf*=&n6eu5a*=v#3u*52vs
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'спорт-календарь.рф', '193.227.241.192']
+ALLOWED_HOSTS = [
+    '127.0.0.1', 'localhost', 'спорт-календарь.рф', '193.227.241.192',
+    'xn----8sbape2airdjmibr3n.xn--p1ai', 'xn----8sbape2airdjmibr3n.xn--p1ai:8000'
+]
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
